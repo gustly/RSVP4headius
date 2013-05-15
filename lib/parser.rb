@@ -7,27 +7,48 @@ class Parser
 
   def parse
     info_for_users = []
-    @files.each do |file_name|
-      file = open(file_name)
-      json = file.read
+    files.each do |file_name|
+      json = read(file_name)
+      next unless json
 
-      begin
-        user_info = JSON.parse(json)
-      rescue JSON::ParserError
-        next
-      end
+      user_info = parse_json(json)
+      next unless user_info
+
+      email = user_info['email']
+      next unless valid_email?(email)
 
       name = user_info['name']
       company = user_info['company']
-      email = user_info['email']
+      info_for_users << {'name' => name,
+                         'company' => company,
+                         'email' => email}
 
-      unless email =~ /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/
-        next
-      end
-
-      output_for_user = "Name: #{name}\nCompany: #{company}\nEmail: #{email}"
-      info_for_users << output_for_user
     end
     info_for_users
   end
+
+
+  private
+
+  def read(file_name)
+    if File.exists?(file_name)
+      File.read(file_name)
+    else
+      nil
+    end
+  end
+
+  def parse_json(json)
+    begin
+      user_info = JSON.parse(json)
+    rescue JSON::ParserError
+      nil
+    end
+  end
+
+  def valid_email?(email)
+    email =~ /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/
+  end
+
+  attr_reader :files
 end

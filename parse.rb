@@ -1,25 +1,18 @@
-require "rubygems"
-require "json"
+#!/usr/bin/env ruby
 
-files = Dir.glob("*.json")
+require_relative "lib/parser"
 
-files.each do |file_name|
-  file = open(file_name)
-  json = file.read
+unless ARGV.first
+  puts "Use: parse [file names | file glob expression]"
+  exit 1
+end
 
-  parsed = JSON.parse(json)
+parser = Parser.new(ARGV)
+attendees = parser.parse
 
-  if parsed.keys != ["company", "name", "email"]
-    p "Wrong format in #{file_name}"
-    next
-  end
-
-  unless parsed["email"] =~ /^([^\s]+)((?:[-a-z0-9]\.)[a-z]{2,})$/i
-    p "Wrong email format"
-    next
-  end
-
-  parsed.each do |key, value|
-    p "#{key} : #{value}"
-  end
+attendees.each do |user_info|
+  puts "Name: #{user_info['name']}"
+  puts "Company: #{user_info['company']}"
+  puts "Email: #{user_info['email']}"
+  puts
 end
