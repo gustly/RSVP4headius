@@ -1,54 +1,18 @@
 require 'json'
 
 class Parser
+  attr_accessor :files
+
   def initialize(files)
-    @files = files
+    self.files = files
   end
 
   def parse
-    info_for_users = []
-    files.each do |file_name|
-      json = read(file_name)
-      next unless json
-
-      user_info = parse_json(json)
-      next unless user_info
-
-      email = user_info['email']
-      next unless valid_email?(email)
-
-      name = user_info['name']
-      company = user_info['company']
-      info_for_users << {'name' => name,
-                         'company' => company,
-                         'email' => email}
-
+    output = files.map do |f|
+      info = JSON.parse(File.read(f)) rescue nil
+      next unless info && info['email'].match(/\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/)
+      info
     end
-    info_for_users
+    output.compact
   end
-
-
-  private
-
-  def read(file_name)
-    if File.exists?(file_name)
-      File.read(file_name)
-    else
-      nil
-    end
-  end
-
-  def parse_json(json)
-    begin
-      user_info = JSON.parse(json)
-    rescue JSON::ParserError
-      nil
-    end
-  end
-
-  def valid_email?(email)
-    email =~ /\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/
-  end
-
-  attr_reader :files
 end

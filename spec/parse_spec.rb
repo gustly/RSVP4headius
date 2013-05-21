@@ -1,5 +1,5 @@
 require 'rspec'
-require_relative '../lib/parser'
+require './lib/parser'
 
 describe Parser do
   describe '#parse' do
